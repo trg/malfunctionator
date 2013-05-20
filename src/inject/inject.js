@@ -25,7 +25,7 @@ var Malfunctionator = {
                 built_map[ key.capitalize() ] = map[key].capitalize();
             }
         }
-        console.log("built_map = ", built_map);
+        //console.log("built_map = ", built_map);
         this.wordList = built_map;
     },
 
@@ -38,18 +38,40 @@ var Malfunctionator = {
         return text;
     },
 
+    replaceInInputs: function () {
+      var _this = this;
+      $('input[type="text"], textarea').each(function(i, el) {
+        var $el = $(el);
+        var new_val = _this.replaceWordsForText( $el.val() );
+        $el.val(new_val);
+      });
+    },
+
     replaceAll: function () {
         var _this = this;
-        $('body').each(function(i, el) {
-            var replaceWith = _this.replaceWordsForText( $(el).html() );
-            $(el).html(replaceWith);
+        
+        // Replace on all text nodes
+        $('body *').each(function(i, el) {
+            var childNodes = el.childNodes;
+            for (var i = 0; i < childNodes.length; i++) {
+              var childNode = childNodes[i];
+              if (childNode.nodeType === 3 && ['SCRIPT', 'STYLE'].indexOf(el.tagName) < 0 )
+                childNode.nodeValue = _this.replaceWordsForText(childNode.nodeValue);
+            }
         });
+        
+        // Replace in <title>
+        $('title').text( _this.replaceWordsForText($('title').text()) );
+
+        // Replace in text boxes
+        this.replaceInInputs();
     },
 
     initialize: function () {
         console.log("Malfunctionator: Initializing");
         this.generateWordList();
         this.replaceAll();
+        console.log("Malfunctionator: Finished Initializing");
     }
 };
 

@@ -1,6 +1,6 @@
 {
   "name": "Malfunctionator",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "manifest_version": 2,
   "description": "Change instances of words like 'error' and 'bug' to 'malfunction'",
   "homepage_url": "http://thomasgraft.com",
