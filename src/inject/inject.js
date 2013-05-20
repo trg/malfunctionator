@@ -6,6 +6,8 @@ var Malfunctionator = {
 
     wordList: null,
 
+    inputWatchlist: 'input[type="text"], textarea',
+
     generateWordList: function () {
 
         var map = {
@@ -30,48 +32,66 @@ var Malfunctionator = {
     },
 
     replaceWordsForText: function (text) {
-        for (var word in this.wordList) {
-            if (this.wordList.hasOwnProperty(word)) {
-                text = text.replace( new RegExp(word, 'g'), this.wordList[word]);
-            }
-        }
-        return text;
+      if (text === undefined) return;
+      for (var word in this.wordList) {
+          if (this.wordList.hasOwnProperty(word)) {
+              text = text.replace( new RegExp(word, 'g'), this.wordList[word]);
+          }
+      }
+      return text;
     },
 
-    replaceInInputs: function () {
+    replaceInInput: function (el) {
+      var $el = $(el);
+      var new_val = this.replaceWordsForText( $el.val() );
+      $el.val(new_val);
+    },
+
+    replaceInAllInputs: function () {
       var _this = this;
-      $('input[type="text"], textarea').each(function(i, el) {
-        var $el = $(el);
-        var new_val = _this.replaceWordsForText( $el.val() );
-        $el.val(new_val);
+      $(this.inputWatchlist).each(function(i, el) {
+        _this.replaceInInput(el);
       });
     },
 
-    replaceAll: function () {
-        var _this = this;
-        
-        // Replace on all text nodes
-        $('body *').each(function(i, el) {
-            var childNodes = el.childNodes;
-            for (var i = 0; i < childNodes.length; i++) {
-              var childNode = childNodes[i];
-              if (childNode.nodeType === 3 && ['SCRIPT', 'STYLE'].indexOf(el.tagName) < 0 )
-                childNode.nodeValue = _this.replaceWordsForText(childNode.nodeValue);
-            }
-        });
-        
-        // Replace in <title>
-        $('title').text( _this.replaceWordsForText($('title').text()) );
+    replaceAll: function ( scope ) {
+      var _this = this;
+      var scope = scope || $('body *');
+      
+      // Replace on all text nodes
+      scope.each(function(i, el) {
+        var childNodes = el.childNodes;
+        for (var i = 0; i < childNodes.length; i++) {
+          var childNode = childNodes[i];
+          if (childNode.nodeType === 3 && ['SCRIPT', 'STYLE'].indexOf(el.tagName) < 0 )
+            childNode.nodeValue = _this.replaceWordsForText(childNode.nodeValue);
+        }
+      });
+      
+      // Replace in <title>
+      $('title').text( _this.replaceWordsForText($('title').text()) );
 
-        // Replace in text boxes
-        this.replaceInInputs();
+      // Replace in text boxes
+      this.replaceInAllInputs();
     },
 
     initialize: function () {
-        console.log("Malfunctionator: Initializing");
-        this.generateWordList();
-        this.replaceAll();
-        console.log("Malfunctionator: Finished Initializing");
+      var _this = this;
+      var domInsertionDelayTimer;
+      this.generateWordList();
+      this.replaceAll();
+      $(this.inputWatchlist).on('keyup', function () { 
+        _this.replaceInInput(this);
+      });
+      $(document).on('DOMNodeInserted', function (e) {
+        if (domInsertionDelayTimer) {
+          clearInterval(domInsertionDelayTimer);
+        }
+        domInsertionDelayTimer = setTimeout( function () {
+          _this.replaceAll()
+        }, 200);
+      });
+      console.log("Malfunctionator: Finished Initializing");
     }
 };
 
